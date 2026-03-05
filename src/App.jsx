@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import jsx from 'react-syntax-highlighter/dist/esm/languages/prism/jsx';
 import python from 'react-syntax-highlighter/dist/esm/languages/prism/python';
 import dart from 'react-syntax-highlighter/dist/esm/languages/prism/dart';
 import javascript from 'react-syntax-highlighter/dist/esm/languages/prism/javascript';
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 SyntaxHighlighter.registerLanguage('jsx', jsx);
 SyntaxHighlighter.registerLanguage('python', python);
@@ -20,6 +22,8 @@ function App() {
   const [progLang, setProgLang] = useState("React (JSX)");
   const [uiLang, setUiLang] = useState("ar");
   const [theme, setTheme] = useState("light");
+  const reportRef = useRef(null);
+  
   const [history, setHistory] = useState(() => {
     try {
       const saved = localStorage.getItem('taqassi_history');
@@ -34,8 +38,8 @@ function App() {
   const techStack = ["React (JSX)", "Flutter (Dart)", "JavaScript", "Python", "TypeScript", "Java", "Swift", "Kotlin", "C#", "PHP", "Go", "SQL"];
 
   const texts = {
-    ar: { title: "تَقَصّي AI", subtitle: "النسخة المستقرة v8.8", placeholder: `الصق كود ${progLang} هنا يالبشمهندس...`, button: "بدء التقصّي", report: "تقرير المهندس (AI)", editor: "محرر الكود", empty: "بانتظار إبداعك يالبشمهندس حسن...", history: "السجل", clear: "مسح الكل" },
-    en: { title: "Taqassi AI", subtitle: "Stable Build v8.8", placeholder: `Paste your ${progLang} code here, Hassan...`, button: "Analyze Code", report: "AI Analysis Report", editor: "Source Editor", empty: "Waiting for your input, Hassan...", history: "History", clear: "Clear All" }
+    ar: { title: "تَقَصّي AI", subtitle: "إصدار المهندس حسن v9.5", placeholder: `الصق كود ${progLang} هنا يالبشمهندس...`, button: "بدء التقصّي", report: "تقرير المهندس (AI)", editor: "محرر الكود", empty: "بانتظار إبداعك يالبشمهندس حسن...", history: "السجل", clear: "مسح الكل", download: "تحميل PDF" },
+    en: { title: "Taqassi AI", subtitle: "Hassan's Edition v9.5", placeholder: `Paste your ${progLang} code here, Hassan...`, button: "Analyze Code", report: "AI Analysis Report", editor: "Source Editor", empty: "Waiting for your input, Hassan...", history: "History", clear: "Clear All", download: "Download PDF" }
   };
 
   const t = texts[uiLang];
@@ -46,6 +50,18 @@ function App() {
   };
 
   const cur = themes[theme];
+
+  const exportPDF = async () => {
+    const element = reportRef.current;
+    const canvas = await html2canvas(element, { scale: 2, backgroundColor: theme === 'light' ? '#F8FAFC' : '#151921' });
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const imgProps = pdf.getImageProperties(imgData);
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    pdf.save(`Taqassi_Report_Hassan_${Date.now()}.pdf`);
+  };
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
@@ -63,8 +79,8 @@ function App() {
     setLoading(true);
     setResult("");
     const sys = uiLang === "ar" 
-      ? `أنت مهندس برمجيات. التحقق هل الكود ينتمي لـ ${progLang}؟ 1. إذا لا: رد حصراً بتنبيه الخطأ. 2. إذا نعم: اشرح الخطأ بالعربية وقدم الحل.` 
-      : `Expert. Verify ${progLang}. 1. If not: Reply error only. 2. If yes: Explain and fix.`;
+      ? `أنت مهندس برمجيات محترف. التحقق هل الكود ينتمي لـ ${progLang}؟ 1. إذا لا: رد حصراً بتنبيه الخطأ. 2. إذا نعم: اشرح الخطأ بالعربية وقدم الحل.` 
+      : `Expert Engineer. Verify ${progLang}. 1. If not: Reply error only. 2. If yes: Explain and fix.`;
     try {
       const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
@@ -134,7 +150,15 @@ function App() {
         </header>
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6 overflow-hidden">
           <div className="flex flex-col gap-2 min-h-[300px] md:min-h-0"><span className="text-[10px] font-black px-5 uppercase opacity-50">{t.editor} ({progLang})</span><textarea className={`flex-1 rounded-[2.5rem] p-8 border shadow-sm outline-none font-mono text-sm resize-none ${cur.card} ${cur.border} custom-scrollbar`} placeholder={t.placeholder} value={code} onChange={(e) => setCode(e.target.value)} /></div>
-          <div className="flex flex-col gap-2 min-h-[300px] md:min-h-0"><span className="text-[10px] font-black px-5 uppercase opacity-50">{t.report}</span><div className={`flex-1 rounded-[3rem] border p-8 md:p-10 shadow-inner overflow-y-auto leading-relaxed ${cur.input} ${cur.border} custom-scrollbar`}>{result ? <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">{renderContent(result)}</div> : <div className="h-full flex flex-col items-center justify-center opacity-20 italic gap-4">🚀 <p className="text-[10px] uppercase font-bold">{t.empty}</p></div>}</div></div>
+          <div className="flex flex-col gap-2 min-h-[300px] md:min-h-0 relative">
+            <div className="flex justify-between items-center px-5">
+              <span className="text-[10px] font-black uppercase opacity-50">{t.report}</span>
+              {result && <button onClick={exportPDF} className={`text-[10px] font-black px-4 py-1 rounded-full bg-gradient-to-r ${cur.accent} text-white shadow-md active:scale-95 transition-all uppercase`}>{t.download}</button>}
+            </div>
+            <div ref={reportRef} className={`flex-1 rounded-[3rem] border p-8 md:p-10 shadow-inner overflow-y-auto leading-relaxed ${cur.input} ${cur.border} custom-scrollbar`}>
+              {result ? <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">{renderContent(result)}</div> : <div className="h-full flex flex-col items-center justify-center opacity-20 italic gap-4">🚀 <p className="text-[10px] uppercase font-bold">{t.empty}</p></div>}
+            </div>
+          </div>
         </div>
       </main>
     </div>
