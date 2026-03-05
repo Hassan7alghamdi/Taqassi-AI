@@ -128,12 +128,12 @@ function App() {
           <button onClick={() => setTheme('ocean')} className={`w-9 h-9 md:w-11 md:h-11 flex items-center justify-center rounded-xl ${theme === 'ocean' ? 'bg-sky-800 text-sky-200 ring-2 ring-sky-400' : 'opacity-40'}`}>🌊</button>
           <div className="hidden md:flex flex-col gap-2 w-full mt-4 px-2 opacity-0 group-hover:opacity-100 transition-opacity overflow-y-auto max-h-[400px] custom-scrollbar">
             <div className="flex justify-between items-center px-1 mb-2">
-              <span className="text-[10px] font-black uppercase opacity-40">{t.history}</span>
-              {history.length > 0 && <button onClick={clearHistory} className="text-[8px] text-red-500 font-bold">{t.clear}</button>}
+              <span className="text-[15px] font-black uppercase opacity-40">{t.history}</span>
+              {history.length > 0 && <button onClick={clearHistory} className="text-[12px] text-red-500 font-bold">{t.clear}</button>}
             </div>
             {history.map(item => (
               <button key={item.id} onClick={() => { setCode(item.code); setResult(item.result); setProgLang(item.lang); }} className={`w-full p-3 rounded-xl text-[9px] font-bold text-right ${cur.input} border hover:border-emerald-500 transition-all flex flex-col gap-1`}>
-                <span className="text-emerald-500 text-[8px] uppercase">{item.lang}</span>
+                <span className="text-emerald-500 text-[12px] uppercase">{item.lang}</span>
                 <span className="truncate opacity-70 italic">{item.code.substring(0, 20)}...</span>
               </button>
             ))}
